@@ -5,7 +5,7 @@ require_once "../includes/db.php";
 $error = $_GET['error'] ?? '';
 $success = $_GET['success'] ?? '';
 
-$result = $conn->query("SELECT * FROM products ORDER BY id DESC");
+$result = $conn->query("SELECT * FROM products ORDER BY name ASC");
 $products = $result->fetch_all(MYSQLI_ASSOC);
 ?>
 
