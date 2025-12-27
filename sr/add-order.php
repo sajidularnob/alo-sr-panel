@@ -9,7 +9,7 @@ $products = $conn->query("SELECT id, name, price FROM products ORDER BY name ASC
 $shopStmt = $conn->prepare("
     SELECT id, name, address 
     FROM shops 
-    WHERE sr_id = ?
+    WHERE id IN (SELECT shop_id FROM orders WHERE sr_id = ?)
     ORDER BY name ASC
 ");
 $shopStmt->bind_param("i", $_SESSION['user_id']);
@@ -37,12 +37,11 @@ $orderResult = $orders->get_result();
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>SR Panel - Add Order</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<meta charset="UTF-8">
+<title>SR Panel - Add Order</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-
 <body class="bg-gray-100 min-h-screen">
 
 <div class="max-w-5xl mx-auto px-6 py-8">
@@ -59,16 +58,14 @@ $orderResult = $orders->get_result();
         <div class="mb-4 p-3 bg-red-100 text-red-800 rounded"><?= htmlspecialchars($error) ?></div>
     <?php endif; ?>
 
-    <div class="bg-white p-6 rounded shadow mb-10"
-         x-data="shopSelect(<?= htmlspecialchars(json_encode($shops)) ?>)">
+    <!-- ORDER FORM -->
+    <div class="bg-white p-6 rounded shadow mb-10" x-data="shopSelect(<?= htmlspecialchars(json_encode($shops)) ?>)">
 
-        <form method="POST" action="../actions/add_order.php"
-              class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form method="POST" action="../actions/add_order.php" class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             <!-- SHOP NAME -->
             <div class="relative">
                 <label class="block text-sm font-medium mb-1">Shop Name</label>
-
                 <input type="text"
                        x-model="search"
                        @focus="open=true"
@@ -76,22 +73,16 @@ $orderResult = $orders->get_result();
                        class="w-full border rounded px-3 py-2"
                        placeholder="Type or select shop"
                        required>
-
                 <input type="hidden" name="shop_name" :value="selectedName">
                 <input type="hidden" name="shop_address" :value="selectedAddress">
-
-                <div x-show="open"
-                     @click.outside="open=false"
+                <div x-show="open" @click.outside="open=false"
                      class="absolute bg-white border w-full max-h-48 overflow-y-auto rounded mt-1 z-10">
-
                     <template x-for="shop in filteredShops" :key="shop.id">
                         <div @click="selectShop(shop)"
                              class="px-3 py-2 hover:bg-gray-100 cursor-pointer"
                              x-text="shop.name"></div>
                     </template>
-
-                    <div x-show="filteredShops.length === 0"
-                         class="px-3 py-2 text-gray-400">
+                    <div x-show="filteredShops.length === 0" class="px-3 py-2 text-gray-400">
                         New shop will be created
                     </div>
                 </div>
@@ -110,28 +101,21 @@ $orderResult = $orders->get_result();
             <!-- PRODUCTS -->
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium mb-2">Products</label>
-
                 <div id="items" class="space-y-2">
                     <div class="flex gap-2">
                         <select name="product_id[]" class="product w-1/2 border rounded px-3 py-2" required>
                             <option value="">Product</option>
-                            <?php while ($p = $products->fetch_assoc()): ?>
+                            <?php $products->data_seek(0); while ($p = $products->fetch_assoc()): ?>
                                 <option value="<?= $p['id'] ?>" data-price="<?= $p['price'] ?>">
                                     <?= htmlspecialchars($p['name']) ?>
                                 </option>
                             <?php endwhile; ?>
                         </select>
-
-                        <input type="number" name="quantity[]" value="1" min="1"
-                               class="w-1/4 border rounded px-3 py-2" required>
-
-                        <input type="number" step="0.01" name="sell_price[]"
-                               class="price w-1/4 border rounded px-3 py-2" required>
+                        <input type="number" name="quantity[]" value="1" min="1" class="w-1/4 border rounded px-3 py-2" required>
+                        <input type="number" step="0.01" name="sell_price[]" class="price w-1/4 border rounded px-3 py-2" required>
                     </div>
                 </div>
-
-                <button type="button" onclick="addRow()"
-                        class="mt-3 text-blue-600 text-sm">+ Add another product</button>
+                <button type="button" onclick="addRow()" class="mt-3 text-blue-600 text-sm">+ Add another product</button>
             </div>
 
             <div class="md:col-span-2">
@@ -141,6 +125,34 @@ $orderResult = $orders->get_result();
             </div>
 
         </form>
+    </div>
+
+    <!-- ORDERS TABLE -->
+    <div class="bg-white rounded shadow overflow-x-auto">
+        <h2 class="text-xl font-medium p-4 border-b">My Orders</h2>
+        <table class="min-w-full text-sm">
+            <thead class="bg-gray-800 text-white">
+                <tr>
+                    <th class="px-4 py-2 text-left">Shop</th>
+                    <th class="px-4 py-2 text-left">Address</th>
+                    <th class="px-4 py-2 text-right">Total</th>
+                    <th class="px-4 py-2 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                <?php while ($row = $orderResult->fetch_assoc()): ?>
+                    <tr>
+                        <td class="px-4 py-2"><?= htmlspecialchars($row['name']) ?></td>
+                        <td class="px-4 py-2"><?= htmlspecialchars($row['address']) ?></td>
+                        <td class="px-4 py-2 text-right font-medium">৳<?= number_format($row['total'],2) ?></td>
+                        <td class="text-right">
+                            <a href="order_details.php?id=<?= $row['id'] ?>" class="text-blue-600 mr-2">View</a>
+                            <a href="edit-order.php?id=<?= $row['id'] ?>" class="text-blue-600">Edit</a>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
     </div>
 
 </div>
@@ -153,20 +165,17 @@ function shopSelect(shops) {
         selectedName: '',
         selectedAddress: '',
         shops: shops,
-
         get filteredShops() {
             return this.shops.filter(s =>
                 s.name.toLowerCase().includes(this.search.toLowerCase())
             );
         },
-
         selectShop(shop) {
             this.search = shop.name;
             this.selectedName = shop.name;
             this.selectedAddress = shop.address;
             this.open = false;
         },
-
         init() {
             this.$watch('search', value => {
                 this.selectedName = value;
