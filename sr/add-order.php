@@ -47,12 +47,19 @@ $orderResult = $orders->get_result();
 
 <div class="max-w-5xl mx-auto px-4 py-8">
 
-    <!-- Company Title -->
-    <div class="text-center mb-8">
-        <h1 class="text-3xl md:text-4xl font-semibold text-blue-900 inline-block border-b-2 border-blue-600 pb-2">
-            Alo Industries Ltd.
-        </h1>
+  <!-- Company Title & Navigation -->
+<div class="text-center mb-8">
+    <h1 class="text-3xl md:text-4xl font-semibold text-blue-900 inline-block border-b-2 border-blue-600 pb-2">
+        Alo Industries Ltd.
+    </h1>
+    <!-- Navigation Links -->
+    <div class="flex flex-wrap justify-center gap-4 mt-4">
+        <a href="dashboard.php" class="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition">Dashboard</a>
+        <a href="products.php" class="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition">Products</a>
+        <a href="add-order.php" class="px-4 py-2 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition">Add Order</a>
+        <a href="../actions/logout.php" class="px-4 py-2 bg-red-100 text-red-800 rounded hover:bg-red-200 transition">Logout</a>
     </div>
+</div>
 
     <!-- Success / Error Messages -->
     <?php if ($success): ?>
