@@ -66,13 +66,15 @@ $orderResult = $orders->get_result();
             <!-- SHOP NAME -->
             <div class="relative">
                 <label class="block text-sm font-medium mb-1">Shop Name</label>
-                <input type="text"
-                       x-model="search"
-                       @focus="open=true"
-                       @input="open=true"
-                       class="w-full border rounded px-3 py-2"
-                       placeholder="Type or select shop"
-                       required>
+            <input type="text"
+       x-model="search"
+       @focus="open=true"
+       @click="open=true"
+       @input="open=true"
+       class="w-full border rounded px-3 py-2"
+       placeholder="Type or select shop"
+       required>
+
                 <input type="hidden" name="shop_name" :value="selectedName">
                 <input type="hidden" name="shop_address" :value="selectedAddress">
                 <div x-show="open" @click.outside="open=false"
@@ -170,12 +172,12 @@ function shopSelect(shops) {
                 s.name.toLowerCase().includes(this.search.toLowerCase())
             );
         },
-        selectShop(shop) {
-            this.search = shop.name;
-            this.selectedName = shop.name;
-            this.selectedAddress = shop.address;
-            this.open = false;
-        },
+       selectShop(shop) {
+    this.search = shop.name;
+    this.selectedName = shop.name;
+    this.selectedAddress = shop.address;
+    this.open = false; // close dropdown after selecting
+},
         init() {
             this.$watch('search', value => {
                 this.selectedName = value;
