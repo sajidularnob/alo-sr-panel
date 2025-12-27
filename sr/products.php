@@ -8,17 +8,18 @@ $products = $conn->query("SELECT * FROM products ORDER BY name ASC");
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>SR Panel - Products</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SR Panel - Products</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-<div class="max-w-7xl mx-auto px-6 py-8">
+<div class="max-w-7xl mx-auto px-4 py-8">
 
     <!-- Company Title -->
     <div class="text-center mb-10">
-        <h1 class="text-3xl md:text-4xl font-semibold text-gray-800 tracking-wide inline-block border-b-2 border-blue-600 pb-2">
+        <h1 class="text-3xl md:text-4xl font-semibold text-gray-800 inline-block border-b-2 border-blue-600 pb-2">
             Alo Industries Ltd.
         </h1>
     </div>
@@ -26,9 +27,9 @@ $products = $conn->query("SELECT * FROM products ORDER BY name ASC");
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h2 class="text-2xl font-medium text-gray-800">Available Products</h2>
-        <div class="mt-3 md:mt-0 space-x-4">
-            <a href="dashboard.php" class="text-blue-600 hover:underline">Dashboard</a>
-            <a href="../actions/logout.php" class="text-red-600 hover:underline">Logout</a>
+        <div class="mt-3 md:mt-0 flex flex-wrap gap-3">
+            <a href="dashboard.php" class="px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">Dashboard</a>
+            <a href="../actions/logout.php" class="px-4 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200">Logout</a>
         </div>
     </div>
 
@@ -48,9 +49,9 @@ $products = $conn->query("SELECT * FROM products ORDER BY name ASC");
                     <td class="px-4 py-3">
                         <?php if($row['photo']): ?>
                             <img src="../assets/photos/products/<?php echo $row['photo']; ?>"
-                                 class="w-16 h-16 object-contain rounded border bg-white">
+                                 class="w-12 h-12 md:w-16 md:h-16 object-contain rounded border bg-white">
                         <?php else: ?>
-                            <span class="text-gray-400">N/A</span>
+                            <span class="text-gray-400 text-xs md:text-sm">N/A</span>
                         <?php endif; ?>
                     </td>
                     <td class="px-4 py-3 font-medium text-gray-800">
