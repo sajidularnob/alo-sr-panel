@@ -105,6 +105,7 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
                                     <button type="submit" class="text-red-600 hover:underline">Delete</button>
                                 </form>
 
+
                             </td>
                         </tr>
                     <?php endforeach; ?>
