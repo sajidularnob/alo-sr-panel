@@ -25,7 +25,7 @@ $error = $_GET['error'] ?? '';
     </h1>
 
     <!-- Login Form -->
-    <h2 class="text-xl font-semibold text-center mb-4">Admin Login</h2>
+    <h2 class="text-xl font-semibold text-center mb-4">Login</h2>
 
     <?php if($error): ?>
         <p class="text-red-600 text-center mb-4"><?= htmlspecialchars($error) ?></p>
