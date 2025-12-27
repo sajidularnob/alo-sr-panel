@@ -35,7 +35,7 @@ if (!$result) {
 
     <div class="bg-white rounded shadow overflow-x-auto">
         <table class="min-w-full text-sm">
-            <thead class="bg-gray-800 text-white">
+            <thead class="bg-gray-800 text-black">
                 <tr>
                     <th class="px-4 py-2 text-left">ID</th>
                     <th class="px-4 py-2 text-left">Email / Username</th>
