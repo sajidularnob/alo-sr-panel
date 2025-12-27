@@ -1,18 +1,20 @@
 <?php
-// শুরু session
+ini_set('session.use_strict_mode', 1);
+ini_set('session.use_only_cookies', 1);
 session_start();
 
-// যদি user already login করে থাকে, redirect according to role
-if(isset($_SESSION['user_id']) && isset($_SESSION['role'])) {
-    if($_SESSION['role'] === 'admin'){
-        header("Location: admin/dashboard.php");
+if (isset($_SESSION['user_id'], $_SESSION['role'])) {
+
+    if ($_SESSION['role'] === 'admin') {
+        header("Location: /alo-sr-panel/admin/dashboard.php");
         exit;
-    } elseif($_SESSION['role'] === 'sr') {
-        header("Location: sr/dashboard.php");
+    }
+
+    if ($_SESSION['role'] === 'sr') {
+        header("Location: /alo-sr-panel/sr/dashboard.php");
         exit;
     }
 }
 
-// অন্যথায় login page এ redirect
-header("Location: sr/login.php");
+header("Location: /alo-sr-panel/sr/login.php");
 exit;

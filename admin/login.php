@@ -38,7 +38,7 @@ $error = $_GET['error'] ?? '';
     <?php if($error) echo "<p style='color:red;'>$error</p>"; ?>
     <form method="POST" action="../actions/login_action.php">
         <label>Email:</label><br>
-        <input type="email" name="email" required><br><br>
+        <input type="text" name="email" required><br><br>
 
         <label>Password:</label><br>
         <input type="password" name="password" required><br><br>
