@@ -99,12 +99,7 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
                             <td class="px-4 py-2 flex gap-2">
                                 <button @click="openModal(<?= htmlspecialchars(json_encode($row)) ?>)"
                                     class="text-blue-600 hover:underline">Edit</button>
-                                <form method="POST" action="../actions/delete_product.php"
-                                    onsubmit="return confirm('Are you sure you want to delete this product?');">
-                                    <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                                    <button type="submit" class="text-red-600 hover:underline">Delete</button>
-                                </form>
-
+                             
 
                             </td>
                         </tr>
