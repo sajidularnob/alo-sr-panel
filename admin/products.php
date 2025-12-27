@@ -18,7 +18,7 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen" x-data="productModal()">
+<body class="bg-gray-100 font-sans min-h-screen" x-data="productEditor()">
 
 <!-- Navbar -->
 <nav class="bg-white shadow px-6 py-4 flex flex-wrap items-center justify-between">
@@ -91,7 +91,7 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
                             <?php endif; ?>
                         </td>
                         <td class="px-4 py-2">
-                            <button @click="openModal(<?= $row['id'] ?>, '<?= htmlspecialchars(addslashes($row['name'])) ?>', <?= $row['price'] ?>)" class="text-blue-600 hover:underline mr-2">Edit</button>
+                            <button @click="openModal(<?= htmlspecialchars(json_encode($row)) ?>)" class="text-blue-600 hover:underline mr-2">Edit</button>
                             <a href="../actions/delete_product.php?id=<?= $row['id'] ?>" class="text-red-600 hover:underline" onclick="return confirm('Are you sure you want to delete this product?');">Delete</a>
                         </td>
                     </tr>
@@ -100,48 +100,50 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
         </table>
     </div>
 
-    <!-- Edit Modal -->
-    <div x-show="isOpen" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6" @click.outside="closeModal()">
-            <h3 class="text-xl font-semibold mb-4">Edit Product</h3>
-            <form :action="'../actions/edit_product.php?id=' + editId" method="POST" enctype="multipart/form-data" class="space-y-4">
-                <div>
-                    <label class="block font-medium mb-1">Product Name:</label>
-                    <input type="text" x-model="editName" name="name" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block font-medium mb-1">Price:</label>
-                    <input type="number" step="0.01" x-model="editPrice" name="price" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-                <div>
-                    <label class="block font-medium mb-1">Photo:</label>
-                    <input type="file" name="photo" accept="image/*" class="w-full">
-                </div>
-                <div class="flex justify-end gap-2">
-                    <button type="button" @click="closeModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
-                </div>
-            </form>
-        </div>
-    </div>
+</div>
 
+<!-- Edit Modal -->
+<div x-show="showModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 relative">
+        <button @click="closeModal()" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900">&times;</button>
+        <h3 class="text-2xl font-semibold mb-4">Edit Product</h3>
+        <form :action="'../actions/edit_product.php'" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <input type="hidden" name="id" :value="selected.id">
+            <div>
+                <label class="block font-medium mb-1">Product Name:</label>
+                <input type="text" name="name" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" x-model="selected.name">
+            </div>
+            <div>
+                <label class="block font-medium mb-1">Price:</label>
+                <input type="number" step="0.01" name="price" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" x-model="selected.price">
+            </div>
+            <div>
+                <label class="block font-medium mb-1">Photo:</label>
+                <input type="file" name="photo" accept="image/*" class="w-full">
+                <template x-if="selected.photo">
+                    <img :src="'../assets/photos/products/' + selected.photo" alt="Current Photo" class="w-20 h-20 object-contain mt-2 rounded">
+                </template>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" @click="closeModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Update</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
-function productModal() {
+function productEditor(){
     return {
-        isOpen: false,
-        editId: null,
-        editName: '',
-        editPrice: '',
-        openModal(id, name, price) {
-            this.editId = id;
-            this.editName = name;
-            this.editPrice = price;
-            this.isOpen = true;
+        showModal: false,
+        selected: {},
+        openModal(product){
+            this.selected = {...product};
+            this.showModal = true;
         },
-        closeModal() {
-            this.isOpen = false;
+        closeModal(){
+            this.showModal = false;
+            this.selected = {};
         }
     }
 }
