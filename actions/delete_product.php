@@ -2,7 +2,6 @@
 require_once "../includes/auth_admin.php";
 require_once "../includes/db.php";
 
-// Get ID from POST
 $id = $_POST['id'] ?? null;
 
 if (!$id) {

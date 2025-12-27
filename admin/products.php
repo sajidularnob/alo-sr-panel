@@ -90,9 +90,10 @@ $products = $result->fetch_all(MYSQLI_ASSOC);
                                 N/A
                             <?php endif; ?>
                         </td>
-                        <td class="px-4 py-2 flex gap-2">
-                            <button @click="openModal(<?= htmlspecialchars(json_encode($row)) ?>)" class="text-blue-600 hover:underline">Edit</button>
-                            <form method="POST" :action="'../actions/delete_product.php?id=' + <?= $row['id'] ?>" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                        <td class="px-4 py-2">
+                            <button @click="openModal(<?= htmlspecialchars(json_encode($row)) ?>)" class="text-blue-600 hover:underline mr-2">Edit</button>
+                            <form method="POST" action="../actions/delete_product.php" class="inline" onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                <input type="hidden" name="id" value="<?= $row['id'] ?>">
                                 <button type="submit" class="text-red-600 hover:underline">Delete</button>
                             </form>
                         </td>
