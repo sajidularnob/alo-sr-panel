@@ -2,7 +2,8 @@
 require_once "../includes/auth_admin.php";
 require_once "../includes/db.php";
 
-$id = $_GET['id'] ?? null;
+// Get ID from POST
+$id = $_POST['id'] ?? null;
 
 if (!$id) {
     header("Location: ../admin/products.php?error=Invalid product ID");
