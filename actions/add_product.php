@@ -2,34 +2,103 @@
 require_once "../includes/auth_admin.php";
 require_once "../includes/db.php";
 
-$name = trim($_POST['name'] ?? '');
-$price = trim($_POST['price'] ?? '');
+$error = $_GET['error'] ?? '';
+$success = $_GET['success'] ?? '';
 
-// Handle image upload
-$photoFileName = null;
-if(isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK){
-    $ext = pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION);
-    $photoFileName = uniqid('prod_') . '.' . $ext;
+$result = $conn->query("SELECT * FROM products ORDER BY id DESC");
+?>
 
-    $uploadDir = "../assets/photos/products/";
-    if(!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Products - Admin Panel</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen">
 
-    $fullPath = $uploadDir . $photoFileName;
-    move_uploaded_file($_FILES['photo']['tmp_name'], $fullPath);
-}
+<!-- Navbar -->
+<nav class="bg-white shadow px-6 py-4 flex flex-wrap items-center justify-between">
+    <h1 class="text-xl font-bold text-blue-900">Alo Industries Ltd.</h1>
+    <div class="flex flex-wrap gap-4 mt-2 md:mt-0">
+        <a href="dashboard.php" class="text-blue-600 hover:underline">Dashboard</a>
+        <a href="orders.php" class="text-blue-600 hover:underline">Orders</a>
+        <a href="users.php" class="text-blue-600 hover:underline">SR Users</a>
+        <a href="../actions/logout.php" class="text-red-600 hover:underline">Logout</a>
+    </div>
+</nav>
 
-if(empty($name) || empty($price)){
-    header("Location: ../admin/products.php?error=Please fill all fields");
-    exit;
-}
+<div class="max-w-6xl mx-auto px-4 py-6">
 
-$stmt = $conn->prepare("INSERT INTO products (name, price, photo) VALUES (?, ?, ?)");
-$stmt->bind_param("sds", $name, $price, $photoFileName);
+    <h2 class="text-3xl md:text-4xl font-semibold text-gray-800 mb-6">Products</h2>
 
-if($stmt->execute()){
-    header("Location: ../admin/products.php?success=Product added successfully");
-    exit;
-}else{
-    header("Location: ../admin/products.php?error=Failed to add product");
-    exit;
-}
+    <?php if($error): ?>
+        <div class="bg-red-100 text-red-800 px-4 py-2 rounded mb-4 text-center"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
+    <?php if($success): ?>
+        <div class="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-center"><?= htmlspecialchars($success) ?></div>
+    <?php endif; ?>
+
+    <!-- Add Product Form -->
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+        <h3 class="text-2xl font-semibold mb-4">Add Product</h3>
+        <form method="POST" action="../actions/add_product.php" enctype="multipart/form-data" class="space-y-4">
+            <div>
+                <label class="block font-medium mb-1">Product Name:</label>
+                <input type="text" name="name" required
+                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block font-medium mb-1">Price:</label>
+                <input type="number" step="0.01" name="price" required
+                    class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+                <label class="block font-medium mb-1">Photo:</label>
+                <input type="file" name="photo" accept="image/*" class="w-full">
+            </div>
+            <button type="submit" class="bg-green-500 text-white px-5 py-2 rounded hover:bg-green-600 transition">Add Product</button>
+        </form>
+    </div>
+
+    <!-- Product List -->
+    <div class="bg-white shadow rounded-lg p-6 overflow-x-auto">
+        <h3 class="text-2xl font-semibold mb-4">Product List</h3>
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-blue-600 text-white">
+                <tr>
+                    <th class="px-4 py-2 text-left">SL</th>
+                    <th class="px-4 py-2 text-left">Name</th>
+                    <th class="px-4 py-2 text-left">Price</th>
+                    <th class="px-4 py-2 text-left">Photo</th>
+                    <th class="px-4 py-2 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <?php $sl = 1; while($row = $result->fetch_assoc()): ?>
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-2"><?= $sl++ ?></td>
+                        <td class="px-4 py-2"><?= htmlspecialchars($row['name']) ?></td>
+                        <td class="px-4 py-2">৳<?= number_format($row['price'], 2) ?></td>
+                        <td class="px-4 py-2">
+                            <?php if($row['photo']): ?>
+                                <img src="../assets/photos/products/<?= $row['photo'] ?>" alt="Product" class="w-16 h-16 object-contain rounded">
+                            <?php else: ?>
+                                N/A
+                            <?php endif; ?>
+                        </td>
+                        <td class="px-4 py-2">
+                            <a href="edit_product.php?id=<?= $row['id'] ?>" class="text-blue-600 hover:underline mr-2">Edit</a>
+                            <a href="../actions/delete_product.php?id=<?= $row['id'] ?>" class="text-red-600 hover:underline" onclick="return confirm('Are you sure you want to delete this product?');">Delete</a>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>
