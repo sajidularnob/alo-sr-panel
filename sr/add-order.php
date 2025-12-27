@@ -66,19 +66,21 @@ $orderResult = $orders->get_result();
             <!-- SHOP NAME -->
             <div class="relative">
                 <label class="block text-sm font-medium mb-1">Shop Name</label>
-            <input type="text"
+           <input type="text"
        x-model="search"
-       @focus="open=true"
-       @click="open=true"
-       @input="open=true"
+       @focus="$nextTick(() => open = true)"
+       @click="$nextTick(() => open = true)"
+       @input="open = true"
        class="w-full border rounded px-3 py-2"
        placeholder="Type or select shop"
        required>
 
+
                 <input type="hidden" name="shop_name" :value="selectedName">
                 <input type="hidden" name="shop_address" :value="selectedAddress">
-                <div x-show="open" @click.outside="open=false"
-                     class="absolute bg-white border w-full max-h-48 overflow-y-auto rounded mt-1 z-10">
+                <div x-show="open" x-cloak @click.outside="open=false"
+     class="absolute bg-white border w-full max-h-48 overflow-y-auto rounded mt-1 z-10">
+
                     <template x-for="shop in filteredShops" :key="shop.id">
                         <div @click="selectShop(shop)"
                              class="px-3 py-2 hover:bg-gray-100 cursor-pointer"
