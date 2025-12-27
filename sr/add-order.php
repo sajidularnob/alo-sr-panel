@@ -5,6 +5,17 @@ require_once "../includes/db.php";
 /* fetch products */
 $products = $conn->query("SELECT id, name, price FROM products ORDER BY name ASC");
 
+/* fetch SR shops */
+$shopStmt = $conn->prepare("
+    SELECT id, name, address 
+    FROM shops 
+    WHERE sr_id = ?
+    ORDER BY name ASC
+");
+$shopStmt->bind_param("i", $_SESSION['user_id']);
+$shopStmt->execute();
+$shops = $shopStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
 $success = $_GET['success'] ?? '';
 $error = $_GET['error'] ?? '';
 
@@ -25,158 +36,163 @@ $orderResult = $orders->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>SR Panel - Add Order</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
 
-    <div class="max-w-5xl mx-auto px-6 py-8">
+<div class="max-w-5xl mx-auto px-6 py-8">
 
-        <!-- Company Name -->
-        <div class="text-center mb-8">
-            <h1
-                class="text-3xl md:text-4xl font-semibold text-gray-800 tracking-wide inline-block border-b-2 border-blue-600 pb-2">
-                Alo Industries Ltd.
-            </h1>
-        </div>
+    <h1 class="text-3xl text-center mb-8 font-semibold border-b-2 border-blue-600 inline-block">
+        Alo Industries Ltd.
+    </h1>
 
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <h2 class="text-2xl font-medium text-gray-800">Create New Order</h2>
-            <div class="mt-3 md:mt-0 space-x-4">
-                <a href="dashboard.php" class="text-blue-600 hover:underline">Dashboard</a>
-                <a href="products.php" class="text-blue-600 hover:underline">Products</a>
-                <a href="../actions/logout.php" class="text-red-600 hover:underline">Logout</a>
-            </div>
-        </div>
+    <?php if ($success): ?>
+        <div class="mb-4 p-3 bg-green-100 text-green-800 rounded"><?= htmlspecialchars($success) ?></div>
+    <?php endif; ?>
 
-        <!-- Alerts -->
-        <?php if ($success): ?>
-            <div class="mb-4 p-4 rounded bg-green-100 text-green-800">
-                <?= htmlspecialchars($success) ?>
-            </div>
-        <?php endif; ?>
+    <?php if ($error): ?>
+        <div class="mb-4 p-3 bg-red-100 text-red-800 rounded"><?= htmlspecialchars($error) ?></div>
+    <?php endif; ?>
 
-        <?php if ($error): ?>
-            <div class="mb-4 p-4 rounded bg-red-100 text-red-800">
-                <?= htmlspecialchars($error) ?>
-            </div>
-        <?php endif; ?>
+    <div class="bg-white p-6 rounded shadow mb-10"
+         x-data="shopSelect(<?= htmlspecialchars(json_encode($shops)) ?>)">
 
-        <!-- Order Form -->
-        <div class="bg-white rounded shadow p-6 mb-10">
-            <form method="POST" action="../actions/add_order.php" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form method="POST" action="../actions/add_order.php"
+              class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Shop Name</label>
-                    <input type="text" name="shop_name" required class="w-full border rounded px-3 py-2">
-                </div>
+            <!-- SHOP NAME -->
+            <div class="relative">
+                <label class="block text-sm font-medium mb-1">Shop Name</label>
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Shop Address</label>
-                    <input type="text" name="shop_address" required class="w-full border rounded px-3 py-2">
-                </div>
+                <input type="text"
+                       x-model="search"
+                       @focus="open=true"
+                       @input="open=true"
+                       class="w-full border rounded px-3 py-2"
+                       placeholder="Type or select shop"
+                       required>
 
-                <!-- Products -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium mb-2">Products</label>
+                <input type="hidden" name="shop_name" :value="selectedName">
+                <input type="hidden" name="shop_address" :value="selectedAddress">
 
-                    <div id="items" class="space-y-2">
-                        <div class="flex gap-2">
-                            <select name="product_id[]" class="product w-1/2 border rounded px-3 py-2" required>
-                                <option value="">Product</option>
-                                <?php
-                                $products->data_seek(0);
-                                while ($p = $products->fetch_assoc()):
-                                    ?>
-                                    <option value="<?= $p['id'] ?>" data-price="<?= $p['price'] ?>">
-                                        <?= htmlspecialchars($p['name']) ?>
-                                    </option>
-                                <?php endwhile; ?>
-                            </select>
+                <div x-show="open"
+                     @click.outside="open=false"
+                     class="absolute bg-white border w-full max-h-48 overflow-y-auto rounded mt-1 z-10">
 
-                            <input type="number" name="quantity[]" min="1" value="1"
-                                class="qty w-1/4 border rounded px-3 py-2" required>
+                    <template x-for="shop in filteredShops" :key="shop.id">
+                        <div @click="selectShop(shop)"
+                             class="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                             x-text="shop.name"></div>
+                    </template>
 
-                            <input type="number" step="0.01" name="sell_price[]"
-                                class="price w-1/4 border rounded px-3 py-2" required>
-                        </div>
+                    <div x-show="filteredShops.length === 0"
+                         class="px-3 py-2 text-gray-400">
+                        New shop will be created
                     </div>
+                </div>
+            </div>
 
-                    <button type="button" onclick="addRow()" class="mt-3 text-sm text-blue-600 hover:underline">
-                        + Add another product
-                    </button>
+            <!-- SHOP ADDRESS -->
+            <div>
+                <label class="block text-sm font-medium mb-1">Shop Address</label>
+                <input type="text"
+                       name="shop_address"
+                       x-model="selectedAddress"
+                       class="w-full border rounded px-3 py-2"
+                       required>
+            </div>
+
+            <!-- PRODUCTS -->
+            <div class="md:col-span-2">
+                <label class="block text-sm font-medium mb-2">Products</label>
+
+                <div id="items" class="space-y-2">
+                    <div class="flex gap-2">
+                        <select name="product_id[]" class="product w-1/2 border rounded px-3 py-2" required>
+                            <option value="">Product</option>
+                            <?php while ($p = $products->fetch_assoc()): ?>
+                                <option value="<?= $p['id'] ?>" data-price="<?= $p['price'] ?>">
+                                    <?= htmlspecialchars($p['name']) ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+
+                        <input type="number" name="quantity[]" value="1" min="1"
+                               class="w-1/4 border rounded px-3 py-2" required>
+
+                        <input type="number" step="0.01" name="sell_price[]"
+                               class="price w-1/4 border rounded px-3 py-2" required>
+                    </div>
                 </div>
 
-                <div class="md:col-span-2">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
-                        Place Order
-                    </button>
-                </div>
+                <button type="button" onclick="addRow()"
+                        class="mt-3 text-blue-600 text-sm">+ Add another product</button>
+            </div>
 
-            </form>
-        </div>
+            <div class="md:col-span-2">
+                <button class="bg-blue-600 text-white px-6 py-2 rounded">
+                    Place Order
+                </button>
+            </div>
 
-        <!-- Orders List -->
-        <div class="bg-white rounded shadow overflow-x-auto">
-            <h2 class="text-xl font-medium p-4 border-b">My Orders</h2>
-
-            <table class="min-w-full text-sm">
-                <thead class="bg-gray-800 text-white">
-                    <tr>
-                        <th class="px-4 py-2 text-left">Shop</th>
-                        <th class="px-4 py-2 text-left">Address</th>
-                        <th class="px-4 py-2 text-right">Total</th>
-                        <th class="px-4 py-2 text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y">
-                    <?php while ($row = $orderResult->fetch_assoc()): ?>
-                        <tr>
-                            <td class="px-4 py-2"><?= htmlspecialchars($row['name']) ?></td>
-                            <td class="px-4 py-2"><?= htmlspecialchars($row['address']) ?></td>
-                            <td class="px-4 py-2 text-right font-medium">
-                                ৳<?= number_format($row['total'], 2) ?>
-                            </td>
-                            <td>
-                                <a href="order_details.php?id=<?= $row['id'] ?>" class="text-blue-600">
-                                    View
-                                </a>
-                                <a href="edit-order.php?id=<?= $row['id'] ?>" class="text-blue-600">
-                                    Edit
-                                </a>
-                            </td>
-
-
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        </div>
-
+        </form>
     </div>
 
-    <script>
-        function addRow() {
-            const firstRow = document.querySelector('#items > div');
-            const row = firstRow.cloneNode(true);
-            row.querySelectorAll('input').forEach(i => i.value = '');
-            row.querySelector('select').value = '';
-            document.getElementById('items').appendChild(row);
-        }
+</div>
 
-        document.addEventListener('change', function (e) {
-            if (e.target.classList.contains('product')) {
-                const price = e.target.selectedOptions[0].dataset.price;
-                e.target.closest('div').querySelector('.price').value = price || '';
-            }
-        });
-    </script>
+<script>
+function shopSelect(shops) {
+    return {
+        open: false,
+        search: '',
+        selectedName: '',
+        selectedAddress: '',
+        shops: shops,
+
+        get filteredShops() {
+            return this.shops.filter(s =>
+                s.name.toLowerCase().includes(this.search.toLowerCase())
+            );
+        },
+
+        selectShop(shop) {
+            this.search = shop.name;
+            this.selectedName = shop.name;
+            this.selectedAddress = shop.address;
+            this.open = false;
+        },
+
+        init() {
+            this.$watch('search', value => {
+                this.selectedName = value;
+                if (!this.filteredShops.length) {
+                    this.selectedAddress = '';
+                }
+            });
+        }
+    }
+}
+
+function addRow() {
+    const first = document.querySelector('#items > div');
+    const row = first.cloneNode(true);
+    row.querySelectorAll('input').forEach(i => i.value = '');
+    row.querySelector('select').value = '';
+    document.getElementById('items').appendChild(row);
+}
+
+document.addEventListener('change', e => {
+    if (e.target.classList.contains('product')) {
+        const price = e.target.selectedOptions[0].dataset.price;
+        e.target.closest('div').querySelector('.price').value = price || '';
+    }
+});
+</script>
 
 </body>
-
 </html>
