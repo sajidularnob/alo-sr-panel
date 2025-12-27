@@ -6,6 +6,7 @@ $error = $_GET['error'] ?? '';
 $success = $_GET['success'] ?? '';
 
 $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
+$products = $result->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -15,8 +16,9 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Products - Admin Panel</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen">
+<body class="bg-gray-100 font-sans min-h-screen" x-data="productModal()">
 
 <!-- Navbar -->
 <nav class="bg-white shadow px-6 py-4 flex flex-wrap items-center justify-between">
@@ -68,16 +70,17 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-blue-600 text-white">
                 <tr>
-                    <th class="px-4 py-2 text-left">ID</th>
+                    <th class="px-4 py-2 text-left">SL</th>
                     <th class="px-4 py-2 text-left">Name</th>
                     <th class="px-4 py-2 text-left">Price</th>
                     <th class="px-4 py-2 text-left">Photo</th>
+                    <th class="px-4 py-2 text-left">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
-                <?php while($row = $result->fetch_assoc()): ?>
+                <?php $sl = 1; foreach($products as $row): ?>
                     <tr class="hover:bg-gray-50">
-                        <td class="px-4 py-2"><?= $row['id'] ?></td>
+                        <td class="px-4 py-2"><?= $sl++ ?></td>
                         <td class="px-4 py-2"><?= htmlspecialchars($row['name']) ?></td>
                         <td class="px-4 py-2">৳<?= number_format($row['price'], 2) ?></td>
                         <td class="px-4 py-2">
@@ -87,13 +90,62 @@ $result = $conn->query("SELECT * FROM products ORDER BY id DESC");
                                 N/A
                             <?php endif; ?>
                         </td>
+                        <td class="px-4 py-2">
+                            <button @click="openModal(<?= $row['id'] ?>, '<?= htmlspecialchars(addslashes($row['name'])) ?>', <?= $row['price'] ?>)" class="text-blue-600 hover:underline mr-2">Edit</button>
+                            <a href="../actions/delete_product.php?id=<?= $row['id'] ?>" class="text-red-600 hover:underline" onclick="return confirm('Are you sure you want to delete this product?');">Delete</a>
+                        </td>
                     </tr>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
             </tbody>
         </table>
     </div>
 
+    <!-- Edit Modal -->
+    <div x-show="isOpen" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6" @click.outside="closeModal()">
+            <h3 class="text-xl font-semibold mb-4">Edit Product</h3>
+            <form :action="'../actions/edit_product.php?id=' + editId" method="POST" enctype="multipart/form-data" class="space-y-4">
+                <div>
+                    <label class="block font-medium mb-1">Product Name:</label>
+                    <input type="text" x-model="editName" name="name" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block font-medium mb-1">Price:</label>
+                    <input type="number" step="0.01" x-model="editPrice" name="price" required class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block font-medium mb-1">Photo:</label>
+                    <input type="file" name="photo" accept="image/*" class="w-full">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" @click="closeModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
+
+<script>
+function productModal() {
+    return {
+        isOpen: false,
+        editId: null,
+        editName: '',
+        editPrice: '',
+        openModal(id, name, price) {
+            this.editId = id;
+            this.editName = name;
+            this.editPrice = price;
+            this.isOpen = true;
+        },
+        closeModal() {
+            this.isOpen = false;
+        }
+    }
+}
+</script>
 
 </body>
 </html>
