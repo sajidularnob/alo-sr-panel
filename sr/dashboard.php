@@ -72,6 +72,11 @@ require_once "../includes/auth_sr.php";
 </head>
 <body>
 <div class="container">
+     <div class="text-center mb-10">
+        <h1 class="text-3xl md:text-4xl font-semibold text-gray-800 inline-block border-b-2 border-blue-600 pb-2">
+            Alo Industries Ltd.
+        </h1>
+    </div>
     <h1>Welcome, SR!</h1>
     <nav>
         <a href="products.php">Products</a>
