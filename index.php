@@ -6,15 +6,15 @@ session_start();
 if (isset($_SESSION['user_id'], $_SESSION['role'])) {
 
     if ($_SESSION['role'] === 'admin') {
-        header("Location: /alo-sr-panel/admin/dashboard.php");
+        header("Location: /admin/dashboard.php");
         exit;
     }
 
     if ($_SESSION['role'] === 'sr') {
-        header("Location: /alo-sr-panel/sr/dashboard.php");
+        header("Location: sr/dashboard.php");
         exit;
     }
 }
 
-header("Location: /alo-sr-panel/sr/login.php");
+header("Location: sr/login.php");
 exit;
