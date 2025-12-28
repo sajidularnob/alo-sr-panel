@@ -3,7 +3,7 @@ ini_set('session.use_strict_mode', 1);
 ini_set('session.use_only_cookies', 1);
 session_start();
 
-$redirectUrl = "/sr/login.php"; // default
+$redirectUrl = "/admin/login.php"; // default
 
 if (isset($_SESSION['user_id'], $_SESSION['role'])) {
     if ($_SESSION['role'] === 'admin') {
